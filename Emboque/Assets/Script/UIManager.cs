@@ -2,18 +2,25 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Cloud.Analytics;
+
 
 public class UIManager : MonoBehaviour {
 
 	private bool soundFlag=true;
 	public bool UIflag=false;
-
+	
+	public GameObject canvasUI;
 	public GameObject winUI;
 	public GameObject looseUI;
+	public GameObject addBtnUI;
+	public GameObject loadingUI;
+	public GameObject collectUI;
 	public GameObject endUI;
 	public GameObject PanelInfo;
 	public GameObject retoInfo;
 	public GameObject retoPanel;
+	public GameObject isntructionsUI;
 
 	public GameObject particleWhiteStar;
 	public GameObject particleRedStar;
@@ -28,6 +35,9 @@ public class UIManager : MonoBehaviour {
 			Instance=this;
 		}
 	}
+
+
+
 
 	public void SoundToggle(Image image){
 		if(soundFlag){
@@ -47,27 +57,80 @@ public class UIManager : MonoBehaviour {
 			PanelInfo.SetActive(true);
 			UIflag=false;
 			InputForce.Instance.setKinematicCuerpo(false);
+			canvasHide();	
 		}else{
-
+			canvasShow();
 			menu.SetActive(true);
 			PanelInfo.SetActive(false);
 			UIflag=true;
 			InputForce.Instance.setKinematicCuerpo(true);
+
+
+			
+			print ("Send Events Data");
+
 		}
 	}
 
+
+	public void showLoadingUI(){
+		loadingUI.SetActive(true);
+		UIflag=true;
+		canvasShow();
+		instructionsHide();
+	}
+
+	public void hideLoadingUI(){
+		loadingUI.SetActive(false);
+		UIflag=false;
+		canvasHide();
+		instructionsShow();
+	}
+
+	public void skipBtn(){
+		loadingUI.SetActive(false);
+		looseUI.SetActive(true);
+		instructionsHide();
+		AdvertisementTest.Instance.setShowAddFlagFalse();
+		UIflag=false;
+		canvasShow();
+	}
+
+	public void showCollectUI(){
+		collectUI.SetActive(true);
+		hideLooseUI();
+		UIflag=true;
+		canvasShow();
+		instructionsHide();
+	}
+
+	public void hideCollectUI(){
+		PanelInfo.SetActive(true);
+		collectUI.SetActive(false);
+		looseUI.SetActive(false);
+		UIflag=false;
+		InputForce.Instance.addMoreTrys(5);
+		canvasHide();
+		instructionsShow();
+	}
+
+	
 	public void retoUI(){
 		if(retoPanel.activeSelf){
 			retoPanel.SetActive(false);
 			PanelInfo.SetActive(true);
 			UIflag=false;
 			InputForce.Instance.setKinematicCuerpo(false);
+			canvasHide();
+			instructionsShow();
 		}else{
-
+			canvasShow();
 			PanelInfo.SetActive(false);
 			retoPanel.SetActive(true);
 			UIflag=true;
 			InputForce.Instance.setKinematicCuerpo(true);
+			instructionsHide();
+			SoundManager.Instance.playLooseSound();
 		}
 	}
 
@@ -80,6 +143,8 @@ public class UIManager : MonoBehaviour {
 		InputForce.Instance.resetMarkers();
 		PanelInfo.SetActive(true);
 		UIflag=false;
+		instructionsShow();
+		canvasHide();
 	}
 
 	public void sameStage(GameObject panel){
@@ -87,25 +152,43 @@ public class UIManager : MonoBehaviour {
 		InputForce.Instance.resetMarkers();
 		PanelInfo.SetActive(true);
 		UIflag=false;
+		canvasHide();
+		instructionsShow();
 	}
 
 	public void showWinUI(){
 		winUI.SetActive(true);
 		PanelInfo.SetActive(false);
 		UIflag=true;
+		canvasShow();
+		instructionsHide();
 	}
 
 	public void showLooseUI(){
 		looseUI.SetActive(true);
 		PanelInfo.SetActive(false);
+		addBtnUI.SetActive(AdvertisementTest.Instance.showAddFlag);
 		UIflag=true;
+		canvasShow();
+		instructionsHide();
 	}
+
+	public void hideLooseUI(){
+		looseUI.SetActive(false);
+		PanelInfo.SetActive(false);
+		UIflag=false;
+		canvasHide();
+		instructionsShow();
+	}
+	
 
 	public void showEndUI(){
 		endUI.SetActive(true);
 		PanelInfo.SetActive(false);
 		UIflag=true;
 		activateCopihueParticles();
+		canvasShow();
+		instructionsHide();
 	}
 
 	public void resetChallenges(){
@@ -113,6 +196,8 @@ public class UIManager : MonoBehaviour {
 		endUI.SetActive(false);
 		PanelInfo.SetActive(true);
 		UIflag=false;
+		canvasHide();
+		instructionsShow();
 	}
 
 
@@ -129,6 +214,31 @@ public class UIManager : MonoBehaviour {
 
 	public void activateCopihueParticles(){
 		particleCopihue.GetComponent<ParticleSystem>().Play();
+	}
+
+	
+	public void canvasHide(){
+		canvasUI.GetComponent<Image>().color=new Color32(0,0,0,0);
+	}
+	
+	public void canvasShow(){
+		canvasUI.GetComponent<Image>().color=new Color32(0,0,0,120);
+
+	}
+
+	public void instructionsShow(){
+		isntructionsUI.SetActive(true);
+
+
+	}
+
+	public void instructionsHide(){
+		isntructionsUI.SetActive(false);
+	}
+
+	public void animatePanelInfo(){
+		PanelInfo.SetActive(false);
+		PanelInfo.SetActive(true);
 	}
 
 }

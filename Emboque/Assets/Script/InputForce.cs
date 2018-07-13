@@ -57,6 +57,7 @@ public class InputForce : MonoBehaviour
 	private float resetCount = 0;
 	private float resetMax = 1;
 	private bool pointGirosFlag=false;
+	private int extraTrys=0;
 
 	void Awake ()
 	{
@@ -146,16 +147,16 @@ public class InputForce : MonoBehaviour
 		}
 
 
-		if (touchFlag && canPullFlag && !UIManager.Instance.UIflag && Mathf.Abs(posDifY)>0.2) {
+		if (touchFlag && canPullFlag && !UIManager.Instance.UIflag && Mathf.Abs(posDifY)>0.2 && posDifY<0) {
 
 			print(posDifY);
 			//Move Left
-			joinNode.rigidbody2D.AddForce (new Vector2 (-1 * (posDifX * XMoveAmplifier), 0));
+			joinNode.GetComponent<Rigidbody2D>().AddForce (new Vector2 (-1 * (posDifX * XMoveAmplifier), 0));
 			text1.text = "X:" + (posDifX * XMoveAmplifier);
 		
 			//Move Rigth
 
-			joinNode.rigidbody2D.AddForce (new Vector2 (-1 * (posDifX * XMoveAmplifier), 0));
+			joinNode.GetComponent<Rigidbody2D>().AddForce (new Vector2 (-1 * (posDifX * XMoveAmplifier), 0));
 			text1.text = "X:" + (posDifX * XMoveAmplifier);
 
 			//Move Up
@@ -170,14 +171,18 @@ public class InputForce : MonoBehaviour
 				pullForce *= 1.2f;
 			}
 
-			joinNode.rigidbody2D.AddForce (new Vector2 (0, pullForce / timeDiff));
+			joinNode.GetComponent<Rigidbody2D>().AddForce (new Vector2 (0, pullForce / timeDiff));
 			text2.text = "Y:" + pullForce;
 			touchFlag = false;
 
-			cuerpo.rigidbody2D.AddTorque (9000f * posDifX);
+			cuerpo.GetComponent<Rigidbody2D>().AddTorque (9000f * posDifX);
 
 			touchCount++;
 			resolveResults ();
+		}
+
+		if(posDifY>0){
+			resetOnlyPosEmboque();
 		}
 
 
@@ -206,8 +211,8 @@ public class InputForce : MonoBehaviour
 
 		float distancePointMarkers = Vector3.Distance (pointMarker01.transform.position, pointMarker02.transform.position);
 
-		cuerpo.rigidbody2D.AddForce (new Vector2 ((pointMarker01.transform.position.x - pointMarker02.transform.position.x) * 25, 0));
-		joinNode.rigidbody2D.AddForce (new Vector2 (0, 50f));
+		cuerpo.GetComponent<Rigidbody2D>().AddForce (new Vector2 ((pointMarker01.transform.position.x - pointMarker02.transform.position.x) * 25, 0));
+		joinNode.GetComponent<Rigidbody2D>().AddForce (new Vector2 (0, 50f));
 
 		if (distancePointMarkers < 0.5) {
 			pointCount += 1 * Time.deltaTime;
@@ -252,7 +257,7 @@ public class InputForce : MonoBehaviour
 
 	private void refreshText ()
 	{
-		textIntentos.text = touchCount + "/" + StageManager.Instance.stageList [stageCount].intentos;
+		textIntentos.text = touchCount + "/" + (StageManager.Instance.stageList[stageCount].intentos+extraTrys);
 		textEmboques.text = points + "/" + StageManager.Instance.stageList [stageCount].emboques;
 		textGiros.text = giros + "/" + StageManager.Instance.stageList [stageCount].giros;
 	}
@@ -264,7 +269,11 @@ public class InputForce : MonoBehaviour
 				SoundManager.Instance.playNextStageSound();
 				stageCount++;
 				if(stageCount>GameData.Instance.higestStage){
+
 					GameData.Instance.setHigestStage(stageCount);
+
+
+
 					if(StageButtonGenerator.Instance!=null){
 						StageButtonGenerator.Instance.repaintButtons();
 					}
@@ -282,29 +291,45 @@ public class InputForce : MonoBehaviour
 			}
 			
 		}
-		if (touchCount >= StageManager.Instance.stageList[stageCount].intentos && !canPullFlag) {
+		if (touchCount >= StageManager.Instance.stageList[stageCount].intentos+extraTrys && !canPullFlag) {
 			UIManager.Instance.showLooseUI ();
 			SoundManager.Instance.playLooseSound();
-			resetEmboque();
-			resetMarkers ();
+			//resetEmboque();
+			//resetMarkers ();
 		}
 	}
 
-	public void resetEmboque ()
-	{
+	public void resetData(){
+		resetEmboque();
+		resetMarkers ();
+	}
+
+	public void resetFromPanelInfo(){
+		resetEmboque ();
+		SoundManager.Instance.playLooseSound();
+		UIManager.Instance.animatePanelInfo();
+	}
+
+	public void resetOnlyPosEmboque (){
 		picaCollider1.GetComponent<Collider2D> ().enabled = false;
 		picaCollider2.GetComponent<Collider2D> ().enabled = false;
-		UIManager.Instance.UIflag = true;
 		canPullFlag=true;
-		resetFlag = true;
 
 		if (Input.touchCount>0 && !UIManager.Instance.UIflag) {
 			posX = Input.touches [0].position.x / Screen.width;
 			posY = Input.touches [0].position.y / Screen.height;
-
+			
 		}
+
 		posDifX=0;
 		posDifY=0;
+	}
+
+	public void resetEmboque ()
+	{
+		resetOnlyPosEmboque ();
+		resetFlag = true;
+		UIManager.Instance.UIflag = true;
 		resetMarkers ();
 	}
 
@@ -320,7 +345,7 @@ public class InputForce : MonoBehaviour
 		touchCount = 0;
 		points = 0;
 		giros = 0;
-
+		extraTrys=0;
 		refreshText ();
 	}
 
@@ -339,7 +364,7 @@ public class InputForce : MonoBehaviour
 	}
 
 	public void setKinematicCuerpo(bool kinematic){
-		cuerpo.rigidbody2D.isKinematic=kinematic;
+		cuerpo.GetComponent<Rigidbody2D>().isKinematic=kinematic;
 
 	}
 
@@ -356,5 +381,11 @@ public class InputForce : MonoBehaviour
 		}
 		resetEmboque();
 	}
+
+	public void addMoreTrys(int num){
+		extraTrys+=num;
+		refreshText();
+	}
+
 
 }

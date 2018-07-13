@@ -22,9 +22,11 @@ public class StageButtonGenerator : MonoBehaviour
 	// Use this for initialization
 	void Start ()
 	{
-		space = 1.2f * heigthUnit;
+		space = 1.1f * heigthUnit;
 		int stageNum = (StageManager.Instance.stageList.Count);
 		print (stageNum);
+		//gameObject.GetComponent<RectTransform> ().position=new Vector2(0,(-150*stageNum)/2);
+		gameObject.GetComponent<RectTransform> ().sizeDelta=new Vector2(758,85*stageNum);
 		for (int num=0; num<stageNum; num++) {
 			GameObject buttonClone = Instantiate (button) as GameObject;
 			if (num <= GameData.Instance.higestStage) {
